@@ -1,0 +1,13 @@
+services:
+  mailtest:
+    # To build locally instead: comment out `image:` and uncomment `build: .`
+    image: ghcr.io/llwn/mailtest:latest
+    # build: .
+    container_name: mailtest
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - mailtest-data:/data
+
+volumes:
+  mailtest-data:

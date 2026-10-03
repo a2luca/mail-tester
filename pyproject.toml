@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mailtest"
+version = "0.1.0"
+description = "Auto-responder that analyses incoming mail and replies with an SPF/DKIM/DMARC report"
+requires-python = ">=3.11"
+dependencies = ["dnspython>=2.6"]
+
+[project.scripts]
+mailtest = "mailtest.__main__:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mailtest"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

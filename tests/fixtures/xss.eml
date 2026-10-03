@@ -1,0 +1,15 @@
+From: hacker@example.com
+To: mail-test@lucalutz.net
+Subject: Mailtest
+Date: Mon, 01 Jan 2024 10:00:00 +0000
+Message-ID: <xss@example.com>
+X-Custom: <script>alert('xss')</script>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Authentication-Results: mail.example.com;
+	spf=pass smtp.mailfrom=example.com
+Received: from evil.example.com (evil.example.com [5.6.7.8])
+	by mail.example.com with ESMTP id abc;
+	Mon, 01 Jan 2024 10:00:00 +0000
+
+XSS test.

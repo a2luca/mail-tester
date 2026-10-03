@@ -1,0 +1,20 @@
+From: sender@example.com
+To: mail-test@lucalutz.net
+Subject: Mailtest
+Date: Mon, 01 Jan 2024 10:00:00 +0000
+Message-ID: <test-basic@example.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Authentication-Results: mail.example.com;
+	spf=pass smtp.mailfrom=example.com;
+	dkim=pass header.d=example.com;
+	dmarc=pass header.from=example.com
+Received: from mail.example.com (mail.example.com [1.2.3.4])
+	by mail.example.com with ESMTPS id abc123
+	using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384;
+	Mon, 01 Jan 2024 10:00:00 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by mail.example.com with ESMTP id xyz789;
+	Mon, 01 Jan 2024 09:59:58 +0000
+
+Mailtest
