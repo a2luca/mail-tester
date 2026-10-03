@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: DeterminateSystems/nix-installer-action@v16
+      - uses: DeterminateSystems/nix-installer-action@v23
       - run: nix run nixpkgs#alejandra -- --check flake.nix
       - run: nix run nixpkgs#deadnix -- flake.nix
       - run: nix run nixpkgs#statix -- check flake.nix
