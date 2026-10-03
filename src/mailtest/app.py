@@ -23,8 +23,14 @@ log = logging.getLogger("mailtest")
 
 ADDR_RE = re.compile(r"^[^@\s<>\"]+@[^@\s<>\"]+\.[^@\s<>\"]+$")
 NO_REPLY_LOCALPARTS = {
-    "mailer-daemon", "postmaster", "noreply", "no-reply", "do-not-reply",
-    "donotreply", "bounce", "bounces",
+    "mailer-daemon",
+    "postmaster",
+    "noreply",
+    "no-reply",
+    "do-not-reply",
+    "donotreply",
+    "bounce",
+    "bounces",
 }
 
 GOOD = ("#1e7e34", "#e6f4ea")
@@ -34,31 +40,48 @@ NEUTRAL = ("#5f6368", "#f1f3f4")
 BRAND = "#032d41"
 
 RESULT_DE = {
-    "pass": "bestanden", "fail": "nicht bestanden", "softfail": "nicht bestanden (softfail)",
-    "neutral": "neutral", "none": "nicht eingerichtet", "temperror": "vorübergehender Fehler",
-    "permerror": "fehlerhaft eingerichtet", "policy": "durch Richtlinie abgelehnt",
+    "pass": "bestanden",
+    "fail": "nicht bestanden",
+    "softfail": "nicht bestanden (softfail)",
+    "neutral": "neutral",
+    "none": "nicht eingerichtet",
+    "temperror": "vorübergehender Fehler",
+    "permerror": "fehlerhaft eingerichtet",
+    "policy": "durch Richtlinie abgelehnt",
 }
 
 SPF_MAP = {
-    "R_SPF_ALLOW": "pass", "R_SPF_FAIL": "fail", "R_SPF_SOFTFAIL": "softfail",
-    "R_SPF_NEUTRAL": "neutral", "R_SPF_NA": "none", "R_SPF_DNSFAIL": "temperror",
+    "R_SPF_ALLOW": "pass",
+    "R_SPF_FAIL": "fail",
+    "R_SPF_SOFTFAIL": "softfail",
+    "R_SPF_NEUTRAL": "neutral",
+    "R_SPF_NA": "none",
+    "R_SPF_DNSFAIL": "temperror",
     "R_SPF_PERMFAIL": "permerror",
 }
 DKIM_MAP = {
-    "R_DKIM_ALLOW": "pass", "R_DKIM_REJECT": "fail", "R_DKIM_NA": "none",
-    "R_DKIM_TEMPFAIL": "temperror", "R_DKIM_PERMFAIL": "permerror",
+    "R_DKIM_ALLOW": "pass",
+    "R_DKIM_REJECT": "fail",
+    "R_DKIM_NA": "none",
+    "R_DKIM_TEMPFAIL": "temperror",
+    "R_DKIM_PERMFAIL": "permerror",
 }
 DMARC_MAP = {
-    "DMARC_POLICY_ALLOW": "pass", "DMARC_POLICY_ALLOW_WITH_FAILURES": "pass (with failures)",
-    "DMARC_POLICY_REJECT": "fail (p=reject)", "DMARC_POLICY_QUARANTINE": "fail (p=quarantine)",
-    "DMARC_POLICY_SOFTFAIL": "fail (p=none)", "DMARC_NA": "none",
-    "DMARC_BAD_POLICY": "bad policy", "DMARC_DNSFAIL": "temperror",
+    "DMARC_POLICY_ALLOW": "pass",
+    "DMARC_POLICY_ALLOW_WITH_FAILURES": "pass (with failures)",
+    "DMARC_POLICY_REJECT": "fail (p=reject)",
+    "DMARC_POLICY_QUARANTINE": "fail (p=quarantine)",
+    "DMARC_POLICY_SOFTFAIL": "fail (p=none)",
+    "DMARC_NA": "none",
+    "DMARC_BAD_POLICY": "bad policy",
+    "DMARC_DNSFAIL": "temperror",
 }
 
 IP_IN_BRACKETS = re.compile(r"\[(?:IPv6:)?([0-9A-Fa-f:.]+)\]")
 
 
 # ----------------------------------------------------------------- helpers
+
 
 def norm(value) -> str:
     return " ".join(str(value).split()) if value is not None else ""
@@ -86,8 +109,10 @@ def domain_of(addr: str) -> str:
 
 # --------------------------------------------------------------------- DNS
 
+
 def _dns_query(resolver, name: str, rtype: str):
     import dns.resolver
+
     try:
         return list(resolver.resolve(name, rtype)), None
     except dns.resolver.NXDOMAIN:
@@ -146,7 +171,9 @@ def dns_section(resolver, domain: str) -> list[str]:
         out.append("  SPF      WARNING: more than one SPF record -> permerror")
 
     dmarc, err = tagged_records(resolver, f"_dmarc.{domain}", "v=DMARC1")
-    out.append(f"  DMARC    {dmarc[0]}" if dmarc else f"  DMARC    none ({err or 'no v=DMARC1 record'})")
+    out.append(
+        f"  DMARC    {dmarc[0]}" if dmarc else f"  DMARC    none ({err or 'no v=DMARC1 record'})"
+    )
 
     sts, _ = tagged_records(resolver, f"_mta-sts.{domain}", "v=STSv1")
     out.append(f"  MTA-STS  {sts[0] if sts else 'none'}")
@@ -160,6 +187,7 @@ def dns_section(resolver, domain: str) -> list[str]:
 
 
 # --------------------------------------------------------- Received parsing
+
 
 def parse_received(value: str) -> dict:
     v = norm(value)
@@ -186,7 +214,7 @@ def parse_received(value: str) -> dict:
     by = re.search(r"\bby\s+(\S+)", body, re.I)
     if by:
         hop["by"] = by.group(1)
-        w = re.search(r"\bwith\s+(\S+)", body[by.end():], re.I)
+        w = re.search(r"\bwith\s+(\S+)", body[by.end() :], re.I)
         if w:
             hop["with"] = w.group(1)
 
@@ -225,6 +253,7 @@ def find_client(hops: list[dict], my_hostname: str) -> dict | None:
 
 # ---------------------------------------------------------- authentication
 
+
 def rspamd_symbols(msg) -> list[str]:
     value = norm(msg.get("X-Spamd-Result", ""))
     return re.findall(r"\b([A-Z][A-Z0-9_]+)\(", value)
@@ -234,8 +263,11 @@ def auth_summary(msg, my_hostname: str):
     all_headers = [norm(h) for h in (msg.get_all("Authentication-Results") or [])]
     trusted = all_headers
     if my_hostname:
-        trusted = [h for h in all_headers
-                   if h.split(";", 1)[0].strip().lower().rstrip(".").startswith(my_hostname)]
+        trusted = [
+            h
+            for h in all_headers
+            if h.split(";", 1)[0].strip().lower().rstrip(".").startswith(my_hostname)
+        ]
     if not trusted and all_headers:
         trusted = all_headers[:1]
 
@@ -268,6 +300,7 @@ def aligned(a: str, b: str) -> bool:
 
 # ------------------------------------------------------------------- report
 
+
 def mime_tree(part, depth: int = 0) -> list[str]:
     extra = []
     charset = part.get_content_charset()
@@ -285,8 +318,12 @@ def mime_tree(part, depth: int = 0) -> list[str]:
         except Exception:
             payload = b""
         extra.append(f"{len(payload)} bytes")
-    lines = ["  " * (depth + 1) + "- " + part.get_content_type()
-             + (f" ({', '.join(extra)})" if extra else "")]
+    lines = [
+        "  " * (depth + 1)
+        + "- "
+        + part.get_content_type()
+        + (f" ({', '.join(extra)})" if extra else "")
+    ]
     if part.is_multipart():
         for sub in part.get_payload():
             lines += mime_tree(sub, depth + 1)
@@ -306,18 +343,37 @@ def build_report(cfg: Config, msg, raw: bytes, hops: list[dict], client: dict | 
     from_domain = domain_of(from_addr)
     rp_addr = parseaddr(norm(msg.get("Return-Path", "")))[1]
     rp_domain = domain_of(rp_addr)
-    facts = {"folder": folder, "from": from_addr, "ip": None, "ptr": [],
-             "fcrdns": False, "tls": None}
+    facts = {
+        "folder": folder,
+        "from": from_addr,
+        "ip": None,
+        "ptr": [],
+        "fcrdns": False,
+        "tls": None,
+    }
 
     add("MAILTEST REPORT")
     add("=" * 60)
     add(f"Generated:     {datetime.now(cfg.tz):%Y-%m-%d %H:%M:%S %Z}")
-    folder_note = "  <-- the spam filter put this mail into Junk!" if folder.lower() == "junk" else ""
+    folder_note = (
+        "  <-- the spam filter put this mail into Junk!" if folder.lower() == "junk" else ""
+    )
     add(f"Delivered to:  {folder}{folder_note}")
 
     section("Message")
-    for name in ("From", "Sender", "Reply-To", "Return-Path", "To", "Cc",
-                 "Date", "Message-ID", "Subject", "User-Agent", "X-Mailer"):
+    for name in (
+        "From",
+        "Sender",
+        "Reply-To",
+        "Return-Path",
+        "To",
+        "Cc",
+        "Date",
+        "Message-ID",
+        "Subject",
+        "User-Agent",
+        "X-Mailer",
+    ):
         if msg.get(name):
             add(f"  {name + ':':<14} {norm(msg[name])}")
     add(f"  {'Size:':<14} {len(raw)} bytes")
@@ -330,7 +386,9 @@ def build_report(cfg: Config, msg, raw: bytes, hops: list[dict], client: dict | 
         add(f"  IP:           {ip}")
         if names:
             add(f"  PTR (rDNS):   {', '.join(names)}")
-            add(f"  FCrDNS:       {'OK (PTR resolves back to the IP)' if confirmed else 'FAIL (PTR does not resolve back to the IP)'}")
+            add(
+                f"  FCrDNS:       {'OK (PTR resolves back to the IP)' if confirmed else 'FAIL (PTR does not resolve back to the IP)'}"
+            )
         else:
             add(f"  PTR (rDNS):   none ({err})  <-- many receivers reject mail without rDNS")
         add(f"  HELO/EHLO:    {client.get('helo', '-')}")
@@ -349,14 +407,23 @@ def build_report(cfg: Config, msg, raw: bytes, hops: list[dict], client: dict | 
     for key in ("spf", "dkim", "dmarc", "arc"):
         add(f"  {key.upper():<6} {', '.join(results.get(key, ['-']))}")
     add(f"  (source: {source})")
-    dkim_domains = [parse_tags(norm(s)).get("d", "").lower()
-                    for s in (msg.get_all("DKIM-Signature") or [])]
+    dkim_domains = [
+        parse_tags(norm(s)).get("d", "").lower() for s in (msg.get_all("DKIM-Signature") or [])
+    ]
     add(f"  From domain:         {from_domain or '-'}")
-    add(f"  Return-Path domain:  {rp_domain or '-'}"
-        + (f"  (SPF alignment: {'yes' if aligned(from_domain, rp_domain) else 'NO'})" if rp_domain else ""))
+    add(
+        f"  Return-Path domain:  {rp_domain or '-'}"
+        + (
+            f"  (SPF alignment: {'yes' if aligned(from_domain, rp_domain) else 'NO'})"
+            if rp_domain
+            else ""
+        )
+    )
     if dkim_domains:
-        add(f"  DKIM d= domains:     {', '.join(d or '?' for d in dkim_domains)}"
-            f"  (DKIM alignment: {'yes' if any(aligned(from_domain, d) for d in dkim_domains) else 'NO'})")
+        add(
+            f"  DKIM d= domains:     {', '.join(d or '?' for d in dkim_domains)}"
+            f"  (DKIM alignment: {'yes' if any(aligned(from_domain, d) for d in dkim_domains) else 'NO'})"
+        )
     score = spam_score(msg)
     facts.update(auth=results, score=score)
     if score:
@@ -380,8 +447,10 @@ def build_report(cfg: Config, msg, raw: bytes, hops: list[dict], client: dict | 
                 if not ktags.get("p"):
                     add(f"    {s}._domainkey.{d}: key REVOKED (empty p=)")
                 else:
-                    add(f"    {s}._domainkey.{d}: key found "
-                        f"(k={ktags.get('k', 'rsa')}, {len(ktags['p'])} base64 chars)")
+                    add(
+                        f"    {s}._domainkey.{d}: key found "
+                        f"(k={ktags.get('k', 'rsa')}, {len(ktags['p'])} base64 chars)"
+                    )
             else:
                 add(f"    {s}._domainkey.{d}: no key record ({err or 'no p= tag'})")
 
@@ -424,16 +493,19 @@ def build_report(cfg: Config, msg, raw: bytes, hops: list[dict], client: dict | 
 
     section("Full headers (as stored in the mailbox)")
     sep = re.search(rb"\r?\n\r?\n", raw)
-    header_block = raw[:sep.start()] if sep else raw
+    header_block = raw[: sep.start()] if sep else raw
     add(header_block.decode("utf-8", "replace").replace("\r\n", "\n"))
 
     add("")
     add("-- ")
-    add(f"Automated reply from {cfg.mail_address}. The original message is attached as original.eml.")
+    add(
+        f"Automated reply from {cfg.mail_address}. The original message is attached as original.eml."
+    )
     return "\n".join(out), facts
 
 
 # --------------------------------------------------------------- HTML mail
+
 
 def classify(result):
     r = (result or "").lower()
@@ -457,7 +529,11 @@ def check_rows(facts: dict) -> list:
     auth = facts.get("auth", {})
     rows = []
     for key, title, question in (
-        ("spf", "Absender-Berechtigung (SPF)", "Darf dieser Server für Ihre Domain E-Mails versenden?"),
+        (
+            "spf",
+            "Absender-Berechtigung (SPF)",
+            "Darf dieser Server für Ihre Domain E-Mails versenden?",
+        ),
         ("dkim", "Digitale Signatur (DKIM)", "Ist die E-Mail unterwegs unverändert geblieben?"),
         ("dmarc", "Domain-Richtlinie (DMARC)", "Passt alles zusammen mit Ihrer Absender-Domain?"),
     ):
@@ -465,21 +541,51 @@ def check_rows(facts: dict) -> list:
         rows.append((title, question, to_german(value), classify(value)))
 
     if not facts.get("ip"):
-        rows.append(("Server-Name (rDNS)", "Hat der sendende Server einen gültigen Namen?",
-                     "nicht ermittelbar", NEUTRAL))
+        rows.append(
+            (
+                "Server-Name (rDNS)",
+                "Hat der sendende Server einen gültigen Namen?",
+                "nicht ermittelbar",
+                NEUTRAL,
+            )
+        )
     elif not facts.get("ptr"):
-        rows.append(("Server-Name (rDNS)", "Hat der sendende Server einen gültigen Namen?",
-                     "kein Name hinterlegt", BAD))
+        rows.append(
+            (
+                "Server-Name (rDNS)",
+                "Hat der sendende Server einen gültigen Namen?",
+                "kein Name hinterlegt",
+                BAD,
+            )
+        )
     elif facts.get("fcrdns"):
-        rows.append(("Server-Name (rDNS)", "Hat der sendende Server einen gültigen Namen?",
-                     f"in Ordnung ({facts['ptr'][0]})", GOOD))
+        rows.append(
+            (
+                "Server-Name (rDNS)",
+                "Hat der sendende Server einen gültigen Namen?",
+                f"in Ordnung ({facts['ptr'][0]})",
+                GOOD,
+            )
+        )
     else:
-        rows.append(("Server-Name (rDNS)", "Hat der sendende Server einen gültigen Namen?",
-                     f"passt nicht zusammen ({facts['ptr'][0]})", WARN))
+        rows.append(
+            (
+                "Server-Name (rDNS)",
+                "Hat der sendende Server einen gültigen Namen?",
+                f"passt nicht zusammen ({facts['ptr'][0]})",
+                WARN,
+            )
+        )
 
     tls = facts.get("tls")
-    rows.append(("Verschlüsselung (TLS)", "Wurde die E-Mail verschlüsselt übertragen?",
-                 f"ja ({tls.split()[0]})" if tls else "nicht erkannt", GOOD if tls else WARN))
+    rows.append(
+        (
+            "Verschlüsselung (TLS)",
+            "Wurde die E-Mail verschlüsselt übertragen?",
+            f"ja ({tls.split()[0]})" if tls else "nicht erkannt",
+            GOOD if tls else WARN,
+        )
+    )
 
     junk = facts.get("folder", "").lower() == "junk"
     score_txt = facts.get("score") or ""
@@ -488,15 +594,32 @@ def check_rows(facts: dict) -> list:
     except ValueError:
         score = None
     if junk:
-        rows.append(("Spam-Bewertung", "Wird Ihre E-Mail als normale Post erkannt?",
-                     f"als Spam eingestuft ({score_txt})", BAD))
+        rows.append(
+            (
+                "Spam-Bewertung",
+                "Wird Ihre E-Mail als normale Post erkannt?",
+                f"als Spam eingestuft ({score_txt})",
+                BAD,
+            )
+        )
     elif score is None:
-        rows.append(("Spam-Bewertung", "Wird Ihre E-Mail als normale Post erkannt?",
-                     "keine Bewertung", NEUTRAL))
+        rows.append(
+            (
+                "Spam-Bewertung",
+                "Wird Ihre E-Mail als normale Post erkannt?",
+                "keine Bewertung",
+                NEUTRAL,
+            )
+        )
     else:
-        rows.append(("Spam-Bewertung", "Wird Ihre E-Mail als normale Post erkannt?",
-                     f"unauffällig ({score_txt})" if score < 5 else f"grenzwertig ({score_txt})",
-                     GOOD if score < 5 else WARN))
+        rows.append(
+            (
+                "Spam-Bewertung",
+                "Wird Ihre E-Mail als normale Post erkannt?",
+                f"unauffällig ({score_txt})" if score < 5 else f"grenzwertig ({score_txt})",
+                GOOD if score < 5 else WARN,
+            )
+        )
     return rows
 
 
@@ -505,8 +628,10 @@ def build_html(cfg: Config, facts: dict, report_text: str) -> str:
     rows = check_rows(facts)
     problems = any(colors in (BAD, WARN) for *_, colors in rows)
     if problems:
-        verdict = ("Es gibt Punkte, die Ihr IT-Betreuer sich ansehen sollte. "
-                   "Für Sie besteht kein Handlungsbedarf.")
+        verdict = (
+            "Es gibt Punkte, die Ihr IT-Betreuer sich ansehen sollte. "
+            "Für Sie besteht kein Handlungsbedarf."
+        )
         verdict_colors = WARN
     else:
         verdict = "Alles in Ordnung – Ihre E-Mails werden korrekt zugestellt."
@@ -525,7 +650,9 @@ def build_html(cfg: Config, facts: dict, report_text: str) -> str:
             </td>
           </tr>"""
 
-    report = report_text if len(report_text) <= 80000 else report_text[:80000] + "\n[... gekürzt ...]"
+    report = (
+        report_text if len(report_text) <= 80000 else report_text[:80000] + "\n[... gekürzt ...]"
+    )
     company = e(cfg.company_name)
     contact = e(cfg.contact_address)
 
@@ -589,7 +716,7 @@ def build_html(cfg: Config, facts: dict, report_text: str) -> str:
       </td></tr>
 
       <tr><td style="padding:16px 32px;background:{BRAND};color:#ffffff;font-size:12px;line-height:1.5;">
-        {company} &middot; <a href="{e(cfg.website_url)}" style="color:#ffffff;">{e(cfg.website_url.replace('https://', ''))}</a><br>
+        {company} &middot; <a href="{e(cfg.website_url)}" style="color:#ffffff;">{e(cfg.website_url.replace("https://", ""))}</a><br>
         Diese Nachricht wurde automatisch erstellt.
       </td></tr>
 
@@ -601,6 +728,7 @@ def build_html(cfg: Config, facts: dict, report_text: str) -> str:
 
 
 # --------------------------------------------------------------------- state
+
 
 def db_connect(db_path: str) -> sqlite3.Connection:
     con = sqlite3.connect(db_path)
@@ -620,8 +748,10 @@ def today(tz) -> str:
 
 
 def record_use(db: sqlite3.Connection, tz, sender: str | None, client_ip: str | None, status: str):
-    db.execute("INSERT INTO uses (ts, day, sender, client_ip, status) VALUES (?,?,?,?,?)",
-               (utcnow().isoformat(timespec="seconds"), today(tz), sender, client_ip, status))
+    db.execute(
+        "INSERT INTO uses (ts, day, sender, client_ip, status) VALUES (?,?,?,?,?)",
+        (utcnow().isoformat(timespec="seconds"), today(tz), sender, client_ip, status),
+    )
     db.commit()
 
 
@@ -635,6 +765,7 @@ def replies_last_hour(db: sqlite3.Connection, sender: str) -> int:
 
 
 # ------------------------------------------------------------------ sending
+
 
 def smtp_send(cfg: Config, message, recipients: list[str]):
     ctx = ssl.create_default_context()
@@ -673,15 +804,17 @@ def send_reply(cfg: Config, msg, raw: bytes, recipient: str, report: str, facts:
     )
     reply.add_alternative(build_html(cfg, facts, report), subtype="html")
     if len(raw) <= cfg.max_attach_bytes:
-        reply.add_attachment(raw, maintype="application", subtype="octet-stream",
-                             filename="original.eml")
+        reply.add_attachment(
+            raw, maintype="application", subtype="octet-stream", filename="original.eml"
+        )
     smtp_send(cfg, reply, [recipient])
 
 
 def maybe_alert(cfg: Config, db: sqlite3.Connection):
     day = today(cfg.tz)
-    rows = db.execute("SELECT ts, sender, client_ip, status FROM uses WHERE day=? ORDER BY ts",
-                      (day,)).fetchall()
+    rows = db.execute(
+        "SELECT ts, sender, client_ip, status FROM uses WHERE day=? ORDER BY ts", (day,)
+    ).fetchall()
     if len(rows) <= cfg.alert_threshold:
         return
     if db.execute("SELECT 1 FROM alerts WHERE day=?", (day,)).fetchone():
@@ -708,13 +841,15 @@ def maybe_alert(cfg: Config, db: sqlite3.Connection):
     alert.set_content("\n".join(lines))
     smtp_send(cfg, alert, [cfg.alert_to])
 
-    db.execute("INSERT INTO alerts (day, ts) VALUES (?,?)",
-               (day, utcnow().isoformat(timespec="seconds")))
+    db.execute(
+        "INSERT INTO alerts (day, ts) VALUES (?,?)", (day, utcnow().isoformat(timespec="seconds"))
+    )
     db.commit()
     log.warning("usage alert sent to %s (%d uses today)", cfg.alert_to, len(rows))
 
 
 # --------------------------------------------------------------------- IMAP
+
 
 def quote(name: str) -> str:
     return '"' + name.replace("\\", "\\\\").replace('"', '\\"') + '"'
@@ -812,8 +947,10 @@ def poll_folder(cfg: Config, db: sqlite3.Connection, imap, folder: str):
 
 def connect(cfg: Config):
     imap = imaplib.IMAP4_SSL(
-        cfg.imap_host, cfg.imap_port,
-        ssl_context=ssl.create_default_context(), timeout=60,
+        cfg.imap_host,
+        cfg.imap_port,
+        ssl_context=ssl.create_default_context(),
+        timeout=60,
     )
     imap.login(cfg.mail_user, cfg.mail_password)
     imap.create(quote(cfg.processed_folder))
@@ -822,8 +959,12 @@ def connect(cfg: Config):
 
 def run(cfg: Config):
     db = db_connect(cfg.db_path)
-    log.info("mailtest started for %s (subject %r, folders %s)",
-             cfg.mail_address, cfg.trigger_subject, cfg.folders)
+    log.info(
+        "mailtest started for %s (subject %r, folders %s)",
+        cfg.mail_address,
+        cfg.trigger_subject,
+        cfg.folders,
+    )
     while True:
         imap = None
         try:

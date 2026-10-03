@@ -73,9 +73,9 @@ def test_html_escaping_in_company_name():
     html_out = build_html(cfg, facts, report)
 
     # The company name must be escaped; unescaped tag must NOT appear as user content
-    assert 'Test &lt;b&gt;' in html_out
+    assert "Test &lt;b&gt;" in html_out
     # The raw unescaped tag from company_name must not appear literally
-    assert 'Test <b>' not in html_out
+    assert "Test <b>" not in html_out
 
 
 def test_reply_skips_attachment_when_too_large():

@@ -1,6 +1,5 @@
 """Tests for Received header parsing and find_client()."""
 
-
 from mailtest.app import find_client, parse_received
 
 
