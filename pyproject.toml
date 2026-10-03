@@ -7,7 +7,7 @@ name = "mailtest"
 version = "0.1.0"
 description = "Auto-responder that analyses incoming mail and replies with an SPF/DKIM/DMARC report"
 requires-python = ">=3.11"
-dependencies = ["dnspython>=2.6"]
+dependencies = ["dnspython>=2.8.0"]
 
 [project.scripts]
 mailtest = "mailtest.__main__:main"
