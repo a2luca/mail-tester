@@ -6,7 +6,7 @@ from email.parser import BytesParser
 from mailtest.app import skip_reason
 from tests.conftest import load_eml
 
-MY_ADDR = "mail-test@lucalutz.net"
+MY_ADDR = "mail-test@example.com"
 
 
 def parse(raw: bytes):
@@ -36,7 +36,7 @@ def test_no_reply_localpart():
 
 
 def test_mail_from_ourselves():
-    raw = b"From: mail-test@lucalutz.net\r\nSubject: t\r\n\r\n"
+    raw = b"From: mail-test@example.com\r\nSubject: t\r\n\r\n"
     msg = parse(raw)
     assert skip_reason(msg, MY_ADDR, MY_ADDR) == "mail from ourselves"
 

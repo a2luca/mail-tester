@@ -151,7 +151,8 @@
 
           user = lib.mkOption {
             type = lib.types.str;
-            description = "Mail address used to log in (MAIL_USER).";
+            default = "";
+            description = "Mail address used to log in (MAIL_USER). Leave empty to supply MAIL_USER via environmentFile.";
           };
 
           myHostname = lib.mkOption {
@@ -162,8 +163,8 @@
 
           triggerSubject = lib.mkOption {
             type = lib.types.str;
-            default = "Mailtest";
-            description = "Subject line that triggers a reply.";
+            default = "";
+            description = "Subject line that triggers a reply. Leave empty to supply TRIGGER_SUBJECT via environmentFile.";
           };
 
           folders = lib.mkOption {
@@ -210,13 +211,13 @@
 
           websiteUrl = lib.mkOption {
             type = lib.types.str;
-            default = "https://lucalutz.net";
+            default = "https://example.com";
             description = "Website URL linked in the reply mail.";
           };
 
           logoUrl = lib.mkOption {
             type = lib.types.str;
-            default = "https://lucalutz.net/logo-llwn.png";
+            default = "https://example.com/logo.png";
             description = "Logo image URL (use PNG, not SVG).";
           };
 
@@ -281,10 +282,7 @@
                   then cfg.smtpHost
                   else cfg.imapHost;
                 SMTP_PORT = toString cfg.smtpPort;
-                MAIL_USER = cfg.user;
-                MAIL_ADDRESS = cfg.user;
                 MY_HOSTNAME = cfg.myHostname;
-                TRIGGER_SUBJECT = cfg.triggerSubject;
                 FOLDERS = lib.concatStringsSep "," cfg.folders;
                 ALERT_TO = cfg.alertTo;
                 ALERT_THRESHOLD = toString cfg.alertThreshold;
@@ -296,6 +294,13 @@
                 LOGO_URL = cfg.logoUrl;
                 TZ = cfg.timeZone;
                 DB_PATH = "/var/lib/mailtest/state.db";
+              }
+              // lib.optionalAttrs (cfg.user != "") {
+                MAIL_USER = cfg.user;
+                MAIL_ADDRESS = cfg.user;
+              }
+              // lib.optionalAttrs (cfg.triggerSubject != "") {
+                TRIGGER_SUBJECT = cfg.triggerSubject;
               }
               // cfg.extraEnvironment;
           };

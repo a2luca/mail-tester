@@ -9,13 +9,6 @@ the sender domain, the full Received path, Rspamd score, and all raw headers.
 If the service is used more than `ALERT_THRESHOLD` times per day an alert is
 sent once per day to `ALERT_TO`.
 
----
-
-<!-- screenshot placeholder -->
-> **Screenshot** – replace this placeholder with a real screenshot once the
-> service is running.
-
----
 
 ## Mailcow setup
 
@@ -45,13 +38,13 @@ All settings are passed as environment variables.
 | `FOLDERS` | `INBOX,Junk` | Comma-separated list of folders to poll |
 | `PROCESSED_FOLDER` | `Processed` | Folder messages are moved to after processing |
 | `POLL_SECONDS` | `30` | IMAP poll interval |
-| `ALERT_TO` | `info@lucalutz.net` | Address for daily over-use alerts |
+| `ALERT_TO` | `alert@example.com` | Address for daily over-use alerts |
 | `ALERT_THRESHOLD` | `5` | Uses per day that trigger an alert |
 | `PER_SENDER_LIMIT_PER_HOUR` | `5` | Max replies to the same sender per hour |
 | `COMPANY_NAME` | `Luca Lutz Networks` | Company name in the reply mail |
-| `CONTACT_ADDRESS` | `info@lucalutz.net` | Contact address in the reply mail |
-| `WEBSITE_URL` | `https://lucalutz.net` | URL linked in the footer |
-| `LOGO_URL` | `https://lucalutz.net/logo-llwn.png` | Logo image URL – **use PNG**, Gmail and Outlook do not render SVG |
+| `CONTACT_ADDRESS` | `contact@example.com` | Contact address in the reply mail |
+| `WEBSITE_URL` | `https://example.com` | URL linked in the footer |
+| `LOGO_URL` | `https://example.com/logo.png` | Logo image URL – **use PNG**, Gmail and Outlook do not render SVG |
 | `TZ` | `Europe/Berlin` | Timezone for timestamps in the report |
 | `DB_PATH` | `/data/state.db` | Path to the SQLite state database |
 | `DNS_SERVER` | *(system default)* | Custom resolver IPs, comma-separated |
