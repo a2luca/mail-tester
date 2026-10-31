@@ -1,9 +1,9 @@
-FROM python:3.12-slim AS builder
+FROM python:3.15-slim AS builder
 WORKDIR /build
 COPY pyproject.toml src/ ./
 RUN pip install --no-cache-dir --no-warn-script-location --prefix=/install .
 
-FROM python:3.12-slim
+FROM python:3.15-slim
 LABEL org.opencontainers.image.title="mailtest" \
       org.opencontainers.image.description="Auto-responder that replies with an SPF/DKIM/DMARC report" \
       org.opencontainers.image.source="https://github.com/llwn/mailtest" \
